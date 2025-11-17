@@ -6,16 +6,29 @@ class Expression
 public:
     virtual ~Expression( ) = default;
 
+    std::strong_ordering operator<=> (const Expression & rhs ) const = default;
+
     enum ExpressionType
     {
         Number,
-        BinaryExpression
+        BinaryExpr
     };
 
-    explicit Expression(ExpressionType type)
+    explicit Expression( const ExpressionType type)
         : m_type { type }
-    {}
-private:
+    { }
+
+    friend bool operator== ( const Expression &lhs, const Expression &rhs )
+    {
+        return lhs.m_type == rhs.m_type;
+    }
+
+    friend bool operator!= ( const Expression &lhs, const Expression &rhs )
+    {
+        return !( lhs == rhs );
+    }
+
+  private:
     ExpressionType m_type { };
 };
 
@@ -38,7 +51,7 @@ public:
         return m_expression.get();
     }
 private:
-    std::unique_ptr< Expression > m_expression { };
+    std::unique_ptr< Expression > m_expression { nullptr };
 };
 
 class Number final : public Expression
@@ -54,6 +67,73 @@ public:
     {
         return m_value;
     }
+
+    friend bool operator== ( const Number &lhs, const Number &rhs )
+    {
+        return lhs == static_cast< const Expression & >( rhs ) && lhs.m_value == rhs.m_value;
+    }
+
+    friend bool operator== ( const Number &lhs, const double rhs)
+    {
+        return lhs.m_value == rhs;
+    }
+
+    friend bool operator!= ( const Number &lhs, const Number &rhs )
+    {
+        return !( lhs == rhs );
+    }
+
+    friend bool operator< ( const Number &lhs, const Number &rhs )
+    {
+        if ( static_cast< const Expression & >( lhs ) < static_cast< const Expression & >( rhs ) )
+            return true;
+        if ( static_cast< const Expression & >( rhs ) < static_cast< const Expression & >( lhs ) )
+            return false;
+        return lhs.m_value < rhs.m_value;
+    }
+
+    friend bool operator<= ( const Number &lhs, const Number &rhs )
+    {
+        return rhs >= lhs;
+    }
+
+    friend bool operator> ( const Number &lhs, const Number &rhs )
+    {
+        return rhs < lhs;
+    }
+
+    friend bool operator>= ( const Number &lhs, const Number &rhs )
+    {
+        return !( lhs < rhs );
+    }
+
+  private:
+    double m_value { 0.0 };
+};
+
+class BinaryExpression final : public Expression
+{
+public:
+    enum Operator
+    {
+        ADD,
+        SUB,
+        MUL,
+        DIV,
+        NOP,    /// No operation
+    };
+
+    explicit BinaryExpression(
+        std::unique_ptr< Expression > lhs,
+        std::unique_ptr< Expression > rhs, const Operator op
+    ) : Expression { BinaryExpr },
+        m_lhs { std::move( lhs ) },
+        m_rhs { std::move( rhs ) },
+        m_op { op }
+    {}
+
 private:
-    double m_value { };
+    std::unique_ptr< Expression > m_lhs { nullptr };
+    std::unique_ptr< Expression > m_rhs { nullptr };
+    Operator m_op { NOP };
 };
