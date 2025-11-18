@@ -3,6 +3,7 @@
 #include "lexer/token.hpp"
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace parser
@@ -24,6 +25,10 @@ namespace parser
         std::unique_ptr< Statement > parse_stmt();
         ///@brief Parse an expression.
         std::unique_ptr< Expression > parse_expr();
+        ///@brief Parse a precedence level.
+        std::unique_ptr< Expression > parse_precedence( int min_precedence );
+        ///@brief Parse a primary expression.
+        std::unique_ptr< Expression > parse_prim();
 
         std::size_t m_position { 0 };
 
@@ -32,5 +37,8 @@ namespace parser
         ///@brief Expect the current token type to be an expected
         ///type, if not an error will be thrown.
         void expect( token::TokenType type, std::string_view error_message );
+
+        ///@brief Helper function which creates a new BinaryOp struct if the current token is one.
+        std::optional< BinaryOp > binary_op( ) const;
     };
 }

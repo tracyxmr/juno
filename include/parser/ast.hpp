@@ -1,10 +1,28 @@
 #pragma once
 #include <memory>
+#include <stdexcept>
+
+class BinaryExpression;
+class Number;
+
+///@brief This essentially allows a more robust way to access
+///the underlying values of a derived class of an Expression.
+///Hence, the name "Visitor", we can take a reference to the
+///derived class and access it's public methods or values.
+class Visitor
+{
+public:
+    virtual ~Visitor() = default;
+    virtual void visit( const Number& n ) = 0;
+    virtual void visit( const BinaryExpression& b ) = 0;
+};
 
 class Expression
 {
 public:
     virtual ~Expression( ) = default;
+
+    virtual void accept( Visitor& v ) const = 0;
 
     std::strong_ordering operator<=> (const Expression & rhs ) const = default;
 
@@ -62,6 +80,11 @@ public:
           m_value { value }
     { }
 
+    void accept(Visitor &v) const override
+    {
+        v.visit( *this );
+    }
+
     [[nodiscard]]
     double get_value( ) const
     {
@@ -111,10 +134,9 @@ public:
     double m_value { 0.0 };
 };
 
-class BinaryExpression final : public Expression
+struct BinaryOp
 {
-public:
-    enum Operator
+    enum Type
     {
         ADD,
         SUB,
@@ -123,17 +145,101 @@ public:
         NOP,    /// No operation
     };
 
+    Type op;        /// Operator
+
+    ///@brief Returns the precedence level depending on type.
+    [[nodiscard]]
+    int precedence( ) const
+    {
+        switch ( op )
+        {
+            case ADD: case SUB: return 1;
+            case MUL: case DIV: return 2;
+            case NOP: return -1;
+            default: throw std::runtime_error( "[juno::ast_error] unknown operation type in BinaryOp" );
+        }
+    }
+};
+
+class BinaryExpression : public Expression
+{
+public:
     explicit BinaryExpression(
         std::unique_ptr< Expression > lhs,
-        std::unique_ptr< Expression > rhs, const Operator op
+        std::unique_ptr< Expression > rhs,
+        const BinaryOp op
     ) : Expression { BinaryExpr },
         m_lhs { std::move( lhs ) },
         m_rhs { std::move( rhs ) },
         m_op { op }
-    {}
+    {
+    }
 
-private:
+    void accept( Visitor& v ) const override
+    {
+        v.visit(*this);
+    }
+
+    [[nodiscard]]
+    std::unique_ptr< Expression > &get_lhs( )
+    {
+        return m_lhs;
+    }
+
+    [[nodiscard]]
+    std::unique_ptr< Expression > &get_rhs( )
+    {
+        return m_rhs;
+    }
+
+    [[nodiscard]]
+    BinaryOp &get_op( )
+    {
+        return m_op;
+    }
+
+    [[nodiscard]]
+    const std::unique_ptr< Expression > &get_lhs( ) const
+    {
+        return m_lhs;
+    }
+
+    [[nodiscard]]
+    const std::unique_ptr< Expression > &get_rhs( ) const
+    {
+        return m_rhs;
+    }
+
+    [[nodiscard]]
+    const BinaryOp &get_op( ) const
+    {
+        return m_op;
+    }
+
+  private:
     std::unique_ptr< Expression > m_lhs { nullptr };
     std::unique_ptr< Expression > m_rhs { nullptr };
-    Operator m_op { NOP };
+    BinaryOp m_op { BinaryOp::NOP };
 };
+
+/*
+ *  These functions below have been replaced by the visitor,
+ *  but can still be used for other things.
+ */
+
+///@brief Safely cast a unique_ptr to a derived type, const.
+///@return Pointer to the derived type, or nullptr if cast fails.
+template<typename Derived, typename Base>
+[[nodiscard]]
+const Derived* safe_cast( const std::unique_ptr< Base >& ptr )
+{
+    return dynamic_cast<const Derived*>( ptr.get( ) );
+}
+
+///@brief Safely cast a unique_ptr to a derived type, which is non const.
+template<typename Derived, typename Base>
+[[nodiscard]]
+Derived* safe_cast(std::unique_ptr<Base>& ptr)
+{
+    return dynamic_cast<Derived*>(ptr.get());
+}

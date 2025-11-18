@@ -58,6 +58,8 @@ add_executable(${PROJECT_NAME} ${PROJ_SOURCES} ${PROJ_HEADERS}
         include/parser/ast.hpp
         include/parser/parser.hpp
         source/parser/parser.cpp
+        include/evaluator/evaluator.hpp
+        source/evaluator/evaluator.cpp
 )
 
 # Add the include directories for the project.

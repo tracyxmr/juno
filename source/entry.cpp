@@ -1,5 +1,6 @@
 #include "constants.hpp"
 #include "system_util.hpp"
+#include "evaluator/evaluator.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 
@@ -20,24 +21,28 @@ std::int32_t main( )
         system_util::get_system_platform(  )
     );
 
-    constexpr std::string_view test_source = "42.4562";
+    constexpr std::string_view test_source = "1 + 1";
 
     Lexer lexer { test_source };
     Parser parser { lexer.tokenize(  ) };
 
-    const auto ast { parser.parse( ) };
-    for ( auto & stmt : ast )
+    EvalVisitor eval_visitor;
+    for (
+        const auto ast { parser.parse( ) };
+        const auto & stmt : ast )
     {
-        if ( const auto * expr_stmt { dynamic_cast< ExpressionStatement* >( stmt.get( ) ) } )
+        if ( const auto * expr_stmt { dynamic_cast<const ExpressionStatement*>( stmt.get( ) ) } )
         {
-            Expression* expr = expr_stmt->get_expression(  );
-
-            if ( const auto * n { dynamic_cast< Number* >( expr )})
+            const auto * expr = expr_stmt->get_expression( );
+            if ( auto * b { dynamic_cast<const BinaryExpression*>( expr ) } )
             {
-                std::println( "Expression::Number = {}", n->get_value(  ));
+                b->accept( eval_visitor );
+                break;
             }
         }
     }
+
+    std::println( "EvalVisitor result: {}", eval_visitor.get_result(  ) );
 
     return EXIT_SUCCESS;
 }
