@@ -33,7 +33,7 @@ std::int32_t main( )
     {
         if ( const auto * expr_stmt { dynamic_cast<const ExpressionStatement*>( stmt.get( ) ) } )
         {
-            const auto * expr = expr_stmt->get_expression( );
+            const auto * expr { expr_stmt->get_expression( ) };
             if ( auto * b { dynamic_cast<const BinaryExpression*>( expr ) } )
             {
                 b->accept( eval_visitor );
