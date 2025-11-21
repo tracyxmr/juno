@@ -51,16 +51,7 @@ configure_file(
 )
 
 # Add executable target (Change to add_library if building DLL).
-add_executable(${PROJECT_NAME} ${PROJ_SOURCES} ${PROJ_HEADERS}
-        include/lexer/token.hpp
-        include/lexer/lexer.hpp
-        source/lexer/lexer.cpp
-        include/parser/ast.hpp
-        include/parser/parser.hpp
-        source/parser/parser.cpp
-        include/evaluator/evaluator.hpp
-        source/evaluator/evaluator.cpp
-)
+add_executable(${PROJECT_NAME} ${PROJ_SOURCES} ${PROJ_HEADERS})
 
 # Add the include directories for the project.
 target_include_directories(${PROJECT_NAME} PUBLIC

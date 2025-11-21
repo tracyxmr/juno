@@ -1,4 +1,5 @@
 #pragma once
+
 #include <memory>
 #include <stdexcept>
 
@@ -161,7 +162,7 @@ struct BinaryOp
     }
 };
 
-class BinaryExpression : public Expression
+class BinaryExpression final : public Expression
 {
 public:
     explicit BinaryExpression(

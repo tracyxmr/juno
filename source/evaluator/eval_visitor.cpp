@@ -1,4 +1,4 @@
-#include <evaluator/evaluator.hpp>
+#include <evaluator/eval_visitor.hpp>
 
 void EvalVisitor::visit( const BinaryExpression &b )
 {

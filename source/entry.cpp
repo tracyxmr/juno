@@ -1,6 +1,8 @@
 #include "constants.hpp"
 #include "system_util.hpp"
-#include "evaluator/evaluator.hpp"
+#include "compiler/compiler.hpp"
+#include "evaluator/eval_visitor.hpp"
+#include "jnvm/machine.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 
@@ -8,6 +10,7 @@
 
 using namespace lexer;
 using namespace parser;
+using namespace jnvm::machine;
 
 // @brief The entry point of the application.
 std::int32_t main( )
@@ -25,24 +28,16 @@ std::int32_t main( )
 
     Lexer lexer { test_source };
     Parser parser { lexer.tokenize(  ) };
+    Compiler compiler { parser.parse(  ) };
+    Machine machine;
 
-    EvalVisitor eval_visitor;
-    for (
-        const auto ast { parser.parse( ) };
-        const auto & stmt : ast )
-    {
-        if ( const auto * expr_stmt { dynamic_cast<const ExpressionStatement*>( stmt.get( ) ) } )
-        {
-            const auto * expr { expr_stmt->get_expression( ) };
-            if ( auto * b { dynamic_cast<const BinaryExpression*>( expr ) } )
-            {
-                b->accept( eval_visitor );
-                break;
-            }
-        }
-    }
+    auto bytecode { compiler.compile(  ) };
 
-    std::println( "EvalVisitor result: {}", eval_visitor.get_result(  ) );
+    std::println("bytecode: {}", bytecode);
+
+    machine.load( bytecode );
+    auto result { machine.execute(  ) };
+    std::println( "Machine Result (returns first reg, register 3 holds the value): {}", result );
 
     return EXIT_SUCCESS;
 }
