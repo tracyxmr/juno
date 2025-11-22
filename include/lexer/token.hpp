@@ -16,6 +16,8 @@ namespace token
         NUMBER,
         LPAREN,
         RPAREN,
+        LBRACE,
+        RBRACE,
         PLUS,
         MINUS,
         ASTERISK,
@@ -23,6 +25,7 @@ namespace token
         EQUALS,
         COMMA,
         PRINT,
+        SEMI,
         LET,
         END_OF_FILE
     };

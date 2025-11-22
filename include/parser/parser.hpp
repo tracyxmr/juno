@@ -23,6 +23,8 @@ namespace parser
 
         ///@brief Parse a statement.
         std::unique_ptr< Statement > parse_stmt();
+        ///@brief Parse a collection of statements into a body.
+        std::unique_ptr< Statement > parse_body();
         ///@brief Parse an expression.
         std::unique_ptr< Expression > parse_expr();
         ///@brief Parse a precedence level.
@@ -38,9 +40,11 @@ namespace parser
         void eat( );
         ///@brief Expect the current token type to be an expected
         ///type, if not an error will be thrown.
-        void expect( token::TokenType type, std::string_view error_message );
+        ///If no error is thrown, the function will return the value of the token.
+        std::string expect( token::TokenType type, std::string_view error_message );
 
         ///@brief Helper function which creates a new BinaryOp struct if the current token is one.
+        [[nodiscard]]
         std::optional< BinaryOp > binary_op( ) const;
     };
 }

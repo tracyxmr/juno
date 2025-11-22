@@ -30,7 +30,7 @@ std::vector<token::Token> lexer::Lexer::tokenize()
             std::size_t start_col { col };
             while ( pos < source.size( ) && std::isalpha( source.at( pos ) )) advance(  );
 
-            const std::string value { source.substr( start, pos ) };
+            const std::string value { source.substr( start, pos - start ) };
             token::TokenType token_type { token::IDENTIFIER };
             if ( token_keywords_map.contains( value ) )
             {
@@ -66,7 +66,7 @@ std::vector<token::Token> lexer::Lexer::tokenize()
 
             tokens.emplace_back(
                 token::TokenType::NUMBER,
-                std::string { source.substr( start, pos ) },
+                std::string { source.substr( start, pos - start ) },
                 line,
                 start_col
             );

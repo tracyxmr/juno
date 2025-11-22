@@ -54,7 +54,7 @@ std::unique_ptr< Expression > parser::Parser::parse_precedence( const int min_pr
 
 std::unique_ptr< Expression > parser::Parser::parse_prim( )
 {
-    // std::println("parsing primary with value = {}", m_current.value);
+    std::println("parsing primary with value = {}", m_current.value);
 
     switch ( m_current.token_type )
     {
@@ -110,14 +110,8 @@ std::vector< std::unique_ptr< Expression > > parser::Parser::parse_args( )
 {
     std::vector< std::unique_ptr< Expression > > args { };
 
-    std::size_t _count { 0 };
-
     while ( m_current.token_type != token::RPAREN )
     {
-        _count++;
-
-        std::println("Parsed {} arg", _count);
-
         std::unique_ptr expr { parse_expr(  ) };
         args.push_back( std::move( expr ) );
 
@@ -127,14 +121,47 @@ std::vector< std::unique_ptr< Expression > > parser::Parser::parse_args( )
         }
     }
 
-    std::println("SIZE OF ARGS = {}", args.size(  ));
-
     return args;
 }
 
 std::unique_ptr< Statement > parser::Parser::parse_stmt( )
 {
-    return std::make_unique< ExpressionStatement >( parse_expr(  ) );
+    if (m_current.token_type == token::LET)
+    {
+        eat(  );
+        auto name { expect( token::IDENTIFIER, "Expected a variable name after 'let'." ) };
+        expect( token::EQUALS, "Expected '=' after variable name." );
+        auto value { parse_expr(  ) };
+        expect( token::SEMI, "Expected ';' after variable declaration statement." );
+        return std::make_unique< VariableDeclaration >( std::move( name ) , std::move( value ) );
+    }
+
+    if ( m_current.token_type == token::LBRACE )
+    {
+        eat(  );
+        auto block { parse_body(  ) };
+        expect( token::RBRACE, "Expected '}' to close code block." );
+        return block;
+    }
+
+    std::println("AT BEFORE ERR = {}", m_current.value);
+
+    auto expr_stmt { std::make_unique< ExpressionStatement >( parse_expr( ) ) };
+    expect( token::SEMI, "Expected ';' after expression statement." );
+    return expr_stmt;
+}
+
+std::unique_ptr< Statement > parser::Parser::parse_body( )
+{
+    std::vector< std::unique_ptr< Statement > > stmts { };
+
+    while ( m_current.token_type != token::RBRACE )
+    {
+        std::unique_ptr stmt { parse_stmt(  ) };
+        stmts.push_back( std::move( stmt ) );
+    }
+
+    return std::make_unique< BlockStmt >( std::move( stmts ) );
 }
 
 void parser::Parser::eat( )
@@ -143,7 +170,7 @@ void parser::Parser::eat( )
         m_current = m_tokens[ ++m_position ];
 }
 
-void parser::Parser::expect( const token::TokenType type, const std::string_view error_message )
+std::string parser::Parser::expect( const token::TokenType type, const std::string_view error_message )
 {
     if ( m_current.token_type != type )
         throw std::runtime_error(
@@ -151,7 +178,10 @@ void parser::Parser::expect( const token::TokenType type, const std::string_view
                 std::string { error_message }
             ));
 
+    auto value { m_current.value };
     eat(  );
+
+    return value;
 }
 
 std::optional< BinaryOp > parser::Parser::binary_op( ) const

@@ -81,6 +81,53 @@ private:
     std::unique_ptr< Expression > m_expression { nullptr };
 };
 
+class BlockStmt final : public Statement
+{
+public:
+    explicit BlockStmt( std::vector< std::unique_ptr< Statement > > body )
+        : m_body { std::move( body ) }
+    { }
+
+    [[nodiscard]]
+    std::vector< std::unique_ptr< Statement > >& get_body( )
+    {
+        return m_body;
+    }
+
+    [[nodiscard]]
+    const std::vector< std::unique_ptr< Statement > >& get_body( ) const
+    {
+        return m_body;
+    }
+
+private:
+    std::vector< std::unique_ptr< Statement > > m_body { };
+};
+
+class VariableDeclaration final : public Statement
+{
+public:
+    explicit VariableDeclaration( std::string name, std::unique_ptr< Expression > value )
+        : m_name { std::move( name ) }, m_value { std::move( value ) }
+    {}
+
+    [[nodiscard]]
+    const std::unique_ptr< Expression > &get_value( ) const
+    {
+        return m_value;
+    }
+
+    [[nodiscard]]
+    std::string_view get_name( ) const
+    {
+        return m_name;
+    }
+
+private:
+    std::string m_name;
+    std::unique_ptr< Expression > m_value { nullptr };
+};
+
 class IdentifierLit final : public Expression
 {
 public:

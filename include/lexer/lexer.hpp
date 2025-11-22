@@ -17,12 +17,15 @@ namespace lexer
     {
         { '(', token::TokenType::LPAREN, },
         { ')', token::TokenType::RPAREN },
+        { '{', token::TokenType::LBRACE },
+        { '}', token::TokenType::RBRACE },
         { '*', token::TokenType::ASTERISK },
         { '+', token::TokenType::PLUS },
         { '-', token::TokenType::MINUS },
         { '/', token::TokenType::SLASH },
         { '=', token::TokenType::EQUALS },
         { ',', token::TokenType::COMMA },
+        { ';', token::TokenType::SEMI },
     };
 
     const std::unordered_map<

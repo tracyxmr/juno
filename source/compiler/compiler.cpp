@@ -7,6 +7,9 @@ std::vector< std::uint32_t > Compiler::compile( )
     bytecode.clear(  );
     nx_register = 0;
 
+    /// Enter the global scope
+    enter_scope(  );
+
     /// Compile all statements in the AST.
     for ( const auto& s : ast )
         comp_statement( *s );
@@ -25,17 +28,46 @@ void Compiler::emit( const jnvm::inst::Instruction &inst )
     std::println("bytecode at emission: {}", bytecode);
 }
 
+void Compiler::enter_scope( )
+{
+    const auto scope { Scope { nx_register } };
+    scopes.emplace_back( scope );
+}
+
+void Compiler::exit_scope( )
+{
+    const Scope scope { scopes.back(  ) };
+    scopes.pop_back(  );
+
+    nx_register = scope.start_reg;
+}
+
 void Compiler::comp_statement( const Statement &stmt )
 {
     /// Downcast the Statement into an ExpressionStatement
-    const auto* expr_stmt { dynamic_cast< const ExpressionStatement* >( &stmt ) };
 
-    if ( !expr_stmt ) throw std::runtime_error("[juno::compile_error] unknown statement type.");
+    if ( const auto *expr_stmt { dynamic_cast< const ExpressionStatement * >( &stmt ) } )
+    {
+        /// Get the Expression of the ExpressionStatement.
+        const Expression* expr { expr_stmt->get_expression(  ) };
+        /// Compile the expression.
+        comp_expression( expr );
+    } else if ( const auto *var_stmt { dynamic_cast< const VariableDeclaration * >( &stmt) })
+    {
+        if (scopes.empty(  )) throw std::runtime_error("[juno::compile_error] Somehow, there are no scopes left.");
 
-    /// Get the Expression of the ExpressionStatement.
-    const Expression* expr { expr_stmt->get_expression(  ) };
-    /// Compile the expression.
-    comp_expression( expr );
+        const auto var_reg { comp_expression( var_stmt->get_value( ).get( ) ) };
+        scopes.back(  ).variables[ var_stmt->get_name(  ) ] = var_reg;
+    } else if ( const auto *block_stmt { dynamic_cast< const BlockStmt * >( &stmt ) } )
+    {
+        enter_scope(  );
+        for ( const auto& s : block_stmt->get_body( ) )
+            comp_statement( *s );
+        exit_scope(  );
+    } else
+    {
+        throw std::runtime_error("[juno::compile_error] unknown statement type.");
+    }
 }
 
 std::uint8_t Compiler::comp_expression( const Expression *expr )
@@ -56,6 +88,15 @@ std::uint8_t Compiler::comp_expression( const Expression *expr )
         std::println("Number reg = {}", reg);
 
         return reg;
+    }
+
+    /// If the expression is an IndentifierLiteral, assume it's referring to a variable
+    /// so search through all scopes until it's found.
+    if ( const auto* id { dynamic_cast< const IdentifierLit* >( expr )})
+    {
+        for ( auto& s : scopes )
+            if ( s.variables.contains( id->get_value(  ) ) )
+                return s.variables[ id->get_value(  ) ];
     }
 
     /// If the expression is a BinaryExpression, emit it's structure to the bytecode.
