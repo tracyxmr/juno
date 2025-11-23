@@ -27,7 +27,7 @@ std::int32_t main( )
             system_util::get_system_platform(  )
         );
 
-        constexpr std::string_view test_source = "@profile { let x: i8 = 234 * 34562; let y: i8 = x / 23; print(y); }";
+        constexpr std::string_view test_source = "@profile { let x = 234 * 34562; let y = x / 23; print(y); }";
 
         Lexer lexer { test_source };
         auto tokens { lexer.tokenize( ) };

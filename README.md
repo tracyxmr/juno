@@ -34,8 +34,8 @@ Juno has a global scope like the large majority of programming languages, each s
 
 ```
 @profile {
-    let x: i8 = 234 * 34562;
-    let y: i8 = x / 23;
+    let x = 234 * 34562;
+    let y = x / 23;
     print(y);
 }
 ```
