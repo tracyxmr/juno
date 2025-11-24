@@ -13,6 +13,9 @@ std::vector<token::Token> lexer::Lexer::tokenize()
         )
         {
             advance(  );
+        } else if ( current == '/' && peek_ahead(  ) && *peek_ahead(  ) == '/') {
+            advance(  ); advance(  );
+            while ( pos < source.size(  ) && source.at( pos ) != '\n' ) advance(  );
         } else if ( current == '-' && *peek_ahead(  ) == '>' ) { /// Process arrow symbol
             tokens.emplace_back(
                 token::ARROW,

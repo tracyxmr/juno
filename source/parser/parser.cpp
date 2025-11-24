@@ -78,6 +78,14 @@ std::unique_ptr< Expression > parser::Parser::parse_prim( )
     }
 }
 
+std::unique_ptr< ReturnStatement > parser::Parser::parse_return( )
+{
+    eat(  );
+    auto value { parse_expr(  ) };
+    expect( token::SEMI, "Expected ';' after return value." );
+    return std::make_unique< ReturnStatement >( std::move( value ) );
+}
+
 std::unique_ptr< Expression > parser::Parser::parse_number( )
 {
     const double value { std::stod( m_current.value ) };
@@ -135,6 +143,7 @@ std::unique_ptr< Statement > parser::Parser::parse_stmt( )
         case token::LBRACE:
         case token::BUILTIN: return parse_block(  );
         case token::FN: return parse_prototype(  );
+        case token::RETURN: return parse_return(  );
         default: return parse_expr_stmt(  );
     }
 }

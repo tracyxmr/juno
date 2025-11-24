@@ -38,6 +38,7 @@ namespace lexer
         { "print", token::TokenType::PRINT },
         { "with", token::TokenType::WITH },
         { "fn", token::TokenType::FN },
+        { "return", token::TokenType::RETURN },
         { "@profile", token::TokenType::BUILTIN },
     };
 

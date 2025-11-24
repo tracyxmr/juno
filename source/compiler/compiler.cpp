@@ -11,27 +11,12 @@ std::vector< std::uint32_t > Compiler::compile( )
     /// Enter the global scope
     enter_scope(  );
 
-    /// PASS 0: Reserve space for jump over all functions
-    const auto main_jmp_addr = bytecode.size();
-    emit(jnvm::inst::Instruction(jnvm::inst::Opcode::JMP, 0)); // Placeholder
-
-    /// PASS 1: Compile all function prototypes first
     for ( const auto& s : ast )
     {
         if ( const auto* proto { dynamic_cast< const FunctionPrototype * >( s.get() ) } )
             comp_prototype( *proto );
     }
 
-    /// PASS 2: Now patch the jump to skip to main code
-    const auto main_code_addr = bytecode.size();
-    bytecode[main_jmp_addr] = jnvm::inst::Instruction(
-        jnvm::inst::Opcode::JMP,
-        static_cast<std::uint8_t>(main_code_addr)
-    ).data();
-
-    std::println("Main code starts at: {}", main_code_addr);
-
-    /// PASS 3: Compile main code (now function_addrs is populated!)
     for ( const auto& s : ast )
     {
         if ( dynamic_cast< const FunctionPrototype * >( s.get() ) )
@@ -95,8 +80,22 @@ void Compiler::comp_statement( const Statement &stmt )
         if ( block_stmt->is_profiled(  ) ) emit( jnvm::inst::Instruction( jnvm::inst::Opcode::PRFE ) );
     } else if ( const auto *proto { dynamic_cast< const FunctionPrototype * >( &stmt ) } )
     {
+    } else if ( const auto *ret { dynamic_cast< const ReturnStatement* >( &stmt ) })
+    {
+        if ( ret->has_value(  ) )
+        {
+            /// Compile the value
+            const auto result_reg { comp_expression( ret->get_value(  ).get(  ) ) };
+            /// We now need to move the result to the fp register
+            if ( result_reg != 0 ) /// 0 is the expected fp register
+            {
+                emit( jnvm::inst::Instruction( jnvm::inst::Opcode::MOVR, 0, result_reg ) );
+            }
+        }
 
-    } else
+        emit( jnvm::inst::Instruction( jnvm::inst::Opcode::RET ));
+    }
+    else
     {
         throw std::runtime_error("[juno::compile_error] unknown statement type.");
     }
@@ -169,9 +168,14 @@ std::uint8_t Compiler::comp_expression( const Expression *expr )
         const auto& callee { call->get_callee(  ) };
         const auto arg_count { args.size(  ) };
 
-        const auto first_reg { comp_expression( args[ 0 ].get( ) ) };
-        for ( int idx { 1 }; idx < arg_count; idx++ )
-            comp_expression( args[ idx ].get( ) );
+        std::uint8_t first_reg { 0 };
+        if ( arg_count == 0 ) first_reg = nx_register++;
+        else
+        {
+            first_reg = comp_expression( args[ 0 ].get( ) );
+            for ( int idx { 1 }; idx < arg_count; idx++ )
+                comp_expression( args[ idx ].get( ) );
+        }
 
         if ( function_addrs.contains( callee ) )
         {
@@ -218,6 +222,5 @@ void Compiler::comp_prototype( const FunctionPrototype &proto )
     /// Compile func body block
     comp_statement( *proto.get_body(  ) );
     exit_scope(  );
-    emit( jnvm::inst::Instruction(jnvm::inst::Opcode::RET) );
     nx_register = saved_reg;
 }

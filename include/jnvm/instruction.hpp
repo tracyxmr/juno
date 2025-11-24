@@ -12,6 +12,7 @@ namespace jnvm::inst
     enum class Opcode : std::uint8_t
     {
         MOV,    /// Move an immediate value to a register.
+        MOVR,   /// Move a register value to a register.
         ADD,    /// Add two registers and store it in another register.
         SUB,    /// Subtract two registers and store it in another register.
         MUL,    /// Multiply two registers and store it in another register.

@@ -58,14 +58,18 @@ foo(5);
 
 This snippet demonstrates defining a user function, since the body of the function is a block, we can still prefix it with special keywords such as `@profile`, and of course variables are automatically cleaned up.
 
-# Roadmap
-* [x] Bytecode VM
-* [x] Variables and expressions
-* [ ] Functions and closures (Juno has a native print function)
-* [ ] Standard Library
-* [ ] Language Server
-* [ ] Performance optimizations
-* [ ] Detailed documentation
+```
+fn foo() -> double { return 2; }
+// this should error because foo returns double
+// and num expects string
+let num: string = foo();
+```
+
+Juno comes with a nice type solver for any case, in this example we declare a function which is annotated to return a double, but the `num` variable is annotated with `string`, this is not going to work because the solver expects the return type of `foo` to be `string`, as `num` is the enforcer for this rule.
+The error message follows:
+```
+[juno::solver_error] Type mismatch in variable 'num' declaration: expected 'string', but got 'double'
+```
 
 # Building from Source
 ### Prerequisites

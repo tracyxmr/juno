@@ -5,6 +5,7 @@
 #include "jnvm/machine.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
+#include "solver/solver.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -28,7 +29,7 @@ std::int32_t main( )
             system_util::get_system_platform(  )
         );
 
-        const std::string test_path { "../../tests/main.jn" };
+        const std::string test_path { "../../tests/type_solver_test_2.jn" };
 
         std::ifstream file { test_path };
         std::string line;
@@ -43,7 +44,10 @@ std::int32_t main( )
         Lexer lexer { content };
         auto tokens { lexer.tokenize( ) };
         Parser parser { tokens };
-        Compiler compiler { parser.parse( ) };
+        std::vector ast { parser.parse(  ) };
+        Solver type_solver;
+        type_solver.solve( ast );
+        Compiler compiler { std::move( ast ) };
         Machine  machine;
 
         auto bytecode { compiler.compile( ) };

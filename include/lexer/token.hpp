@@ -27,6 +27,7 @@ namespace token
         COLON,
         BUILTIN,
         WITH,
+        RETURN,
         PRINT,
         SEMI,
         ARROW,

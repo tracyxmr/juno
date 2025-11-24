@@ -35,15 +35,18 @@ namespace jnvm::machine
         std::uint8_t param_count;
         ///@brief The amount of Local variables.
         std::uint8_t local_count;
+        ///@brief The register to which the result will be stored in.
+        std::uint8_t result_reg;
         ///@brief An array of registers which the frame must save
         std::array< std::uint32_t, REGISTER_COUNT > saved_regs { };
 
         StackFrame( const std::size_t return_addr, const std::uint8_t frame_ptr, const std::uint8_t param_count,
-                    const std::uint8_t local_count, const std::array< std::uint32_t, REGISTER_COUNT > &saved_regs ) :
+                    const std::uint8_t local_count, const std::uint8_t result_reg, const std::array< std::uint32_t, REGISTER_COUNT > &saved_regs ) :
             return_addr { return_addr },
             frame_ptr { frame_ptr },
             param_count { param_count },
             local_count { local_count },
+            result_reg { result_reg },
             saved_regs { saved_regs }
         {
         }
@@ -81,6 +84,15 @@ namespace jnvm::machine
                         const auto imm { inst.op2(  ) };
 
                         registers[ dest_reg ] = imm;
+                        break;
+                    }
+
+                    case Opcode::MOVR:
+                    {
+                        const auto dest_reg { inst.op1(  ) };
+                        const auto src_reg { inst.op2(  ) };
+
+                        registers[ dest_reg ] = registers[ src_reg ];
                         break;
                     }
 
@@ -226,7 +238,7 @@ namespace jnvm::machine
         ///@brief This method will call a user defined function.
         void call_fn( const std::uint8_t fn_addr, const std::uint8_t base_reg, const std::uint8_t arg_count )
         {
-            const StackFrame frame( pc + 1, fp, arg_count, 0, registers );
+            const StackFrame frame( pc + 1, fp, arg_count, 0, base_reg, registers );
             call_stack.push( frame );
             fp = base_reg;
             pc = fn_addr;
@@ -238,7 +250,7 @@ namespace jnvm::machine
         {
             if ( call_stack.empty(  ) ) error( "Return called with empty call stack" );
 
-            const auto return_val { registers[ fp ] };
+            const auto return_val { registers[ 0 ] };
             const auto frame { call_stack.top(  ) };
             call_stack.pop(  );
 
@@ -247,7 +259,7 @@ namespace jnvm::machine
             pc = frame.return_addr;
             fp = frame.frame_ptr;
             /// Store in register 0, the callers register.
-            registers[ 0 ] = return_val;
+            registers[ frame.result_reg ] = return_val;
         }
 
         std::unordered_map< VMNative, std::function< void( std::uint8_t base_reg, std::size_t arg_count ) > > natives {

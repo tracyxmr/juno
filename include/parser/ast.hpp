@@ -260,6 +260,22 @@ struct BinaryOp
 
     Type op;        /// Operator
 
+    ///@brief Returns the op Type as a string
+    [[nodiscard]]
+    std::string to_string() const
+    {
+        switch ( op )
+        {
+            case ADD: return "ADD";
+            case SUB: return "SUB";
+            case MUL: return "MUL";
+            case DIV: return "DIV";
+            case NOP: return "NOP";
+        }
+
+        return "";
+    }
+
     ///@brief Returns the precedence level depending on type.
     [[nodiscard]]
     int precedence( ) const
