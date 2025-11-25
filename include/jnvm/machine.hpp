@@ -175,7 +175,7 @@ namespace jnvm::machine
                     case Opcode::PRFE:
                     {
                         auto end { std::chrono::steady_clock::now(  ) };
-                        auto dur { std::chrono::duration_cast< std::chrono::microseconds >( end - profiler_start_time ) };
+                        auto dur { std::chrono::duration_cast< std::chrono::nanoseconds >( end - profiler_start_time ) };
                         std::println( "Block took {}, processed {} instructions.", dur, pc+1 );
                         break;
                     }

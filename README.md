@@ -58,6 +58,8 @@ foo(5);
 
 This snippet demonstrates defining a user function, since the body of the function is a block, we can still prefix it with special keywords such as `@profile`, and of course variables are automatically cleaned up.
 
+### Function with type solving and annotation.
+
 ```
 fn foo() -> double { return 2; }
 // this should error because foo returns double
@@ -70,6 +72,28 @@ The error message follows:
 ```
 [juno::solver_error] Type mismatch in variable 'num' declaration: expected 'string', but got 'double'
 ```
+
+### Another special specifier, @comptime
+```
+@profile {
+    @comptime
+    let x = 34 * 23445 / 23;
+}
+```
+
+Juno also has another special specifier for variable declarations, @comptime. It evaluates the variables expression at compile time if the value type is supported, right now only binary expressions can be evaluated at runtime. Here is the output showing the average execution time with `@comptime` and without.
+
+With `@comptime`:
+```
+Block took 200ns, processed 3 instructions.
+```
+
+Without:
+```
+Block took 800ns, processed 7 instructions.
+```
+
+The difference is subtle, it is not a necessity to use `@comptime` with binary expressions all the time, however it is still useful to emit fewer instructions during compilation. The timing will also vary depending on many factors, these results are just taken from an average.
 
 # Building from Source
 ### Prerequisites
