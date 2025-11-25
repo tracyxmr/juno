@@ -39,7 +39,8 @@ namespace lexer
         { "with", token::TokenType::WITH },
         { "fn", token::TokenType::FN },
         { "return", token::TokenType::RETURN },
-        { "@profile", token::TokenType::BUILTIN },
+        { "@profile", token::TokenType::SPECIAL },
+        { "@comptime", token::TokenType::SPECIAL },
     };
 
     class Lexer

@@ -14,6 +14,10 @@ class EvalVisitor : public Visitor
 public:
     void visit(const BinaryExpression &b) override;
     void visit(const Number &n) override;
+    void visit(const CallExpression &c) override;
+    void visit(const IdentifierLit &i) override;
+    void visit(const FunctionPrototype &f) override;
+    void visit(const FunctionExpression &f) override;
 
     [[nodiscard]]
     double get_result() const { return m_result; }

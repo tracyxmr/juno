@@ -25,7 +25,7 @@ namespace token
         EQUALS,
         COMMA,
         COLON,
-        BUILTIN,
+        SPECIAL,
         WITH,
         RETURN,
         PRINT,

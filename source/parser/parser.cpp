@@ -139,9 +139,9 @@ std::unique_ptr< Statement > parser::Parser::parse_stmt( )
 {
     switch ( m_current.token_type )
     {
+        case token::SPECIAL:
         case token::LET: return parse_var_decl(  );
         case token::LBRACE:
-        case token::BUILTIN: return parse_block(  );
         case token::FN: return parse_prototype(  );
         case token::RETURN: return parse_return(  );
         default: return parse_expr_stmt(  );
@@ -226,7 +226,19 @@ std::vector< Parameter > parser::Parser::parse_params( )
 
 std::unique_ptr< Statement > parser::Parser::parse_var_decl( )
 {
-    eat(  );
+    const auto special_kw { check( token::SPECIAL ) };
+    auto comptime { false };
+
+    if ( special_kw && m_current.value == "@comptime" )
+    {
+        comptime = true;
+        eat(  );
+    } else if ( m_current.value == "@profile" )
+    {
+        return parse_block(  );
+    }
+
+    expect( token::LET, "Expected 'let' after @comptime" );
 
     auto name { expect( token::IDENTIFIER, "Expected variable name after 'let'." ) };
 
@@ -245,7 +257,8 @@ std::unique_ptr< Statement > parser::Parser::parse_var_decl( )
     return std::make_unique< VariableDeclaration >(
         std::move( name ),
         std::move( value ),
-        std::move( type )
+        std::move( type ),
+        comptime
     );
 }
 
@@ -260,7 +273,7 @@ std::unique_ptr< Statement > parser::Parser::parse_expr_stmt( )
 std::unique_ptr< Statement > parser::Parser::parse_block( )
 {
     bool is_profiled { false };
-    if ( m_current.token_type == token::BUILTIN )
+    if ( m_current.token_type == token::SPECIAL )
     {
         if ( m_current.value == "@profile" )
         {

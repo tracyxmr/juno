@@ -1,5 +1,6 @@
 #pragma once
 
+#include "evaluator/eval_visitor.hpp"
 #include "jnvm/instruction.hpp"
 
 #include <vector>

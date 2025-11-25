@@ -1,0 +1,8 @@
+@profile {
+
+    //@comptime
+    let x = 34 * 23445 / 23;
+
+    print(x);
+
+}

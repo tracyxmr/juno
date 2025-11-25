@@ -1,6 +1,8 @@
 #include <print>
 #include <compiler/compiler.hpp>
 
+EvalVisitor eval_visitor;
+
 std::vector< std::uint32_t > Compiler::compile( )
 {
     /// Reset any state in the compiler
@@ -17,14 +19,20 @@ std::vector< std::uint32_t > Compiler::compile( )
             comp_prototype( *proto );
     }
 
+    std::println("ast size: {}", ast.size(  ));
+
+
     for ( const auto& s : ast )
     {
         if ( dynamic_cast< const FunctionPrototype * >( s.get() ) )
             continue;
 
+        std::println("compiling statement");
+
         comp_statement( *s );
     }
 
+    std::println("EMIT HLT");
     emit(jnvm::inst::Instruction(jnvm::inst::Opcode::HLT));
 
     return bytecode;
@@ -68,7 +76,21 @@ void Compiler::comp_statement( const Statement &stmt )
     {
         if (scopes.empty(  )) throw std::runtime_error("[juno::compile_error] Somehow, there are no scopes left.");
 
-        const auto var_reg { comp_expression( var_stmt->get_value( ).get( ) ) };
+        /// For now, we'll comptime a binary expression.
+        std::uint8_t var_reg { 0 };
+        if ( var_stmt->is_comptime( ) )
+        {
+            if ( const auto *bin { dynamic_cast< const BinaryExpression* >( var_stmt->get_value( ).get(  ) ) } )
+            {
+                eval_visitor.visit( *bin );
+                const Number result { eval_visitor.get_result(  )  };
+                var_reg = comp_expression( &result );
+            }
+        } else
+        {
+            var_reg = comp_expression( var_stmt->get_value( ).get( ) );
+        }
+
         scopes.back(  ).variables[ var_stmt->get_name(  ) ] = var_reg;
     } else if ( const auto *block_stmt { dynamic_cast< const BlockStmt * >( &stmt ) } )
     {

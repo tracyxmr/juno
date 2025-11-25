@@ -29,7 +29,7 @@ std::int32_t main( )
             system_util::get_system_platform(  )
         );
 
-        const std::string test_path { "../../tests/type_solver_test_2.jn" };
+        const std::string test_path { "../../tests/comptime.jn" };
 
         std::ifstream file { test_path };
         std::string line;
@@ -45,8 +45,8 @@ std::int32_t main( )
         auto tokens { lexer.tokenize( ) };
         Parser parser { tokens };
         std::vector ast { parser.parse(  ) };
-        Solver type_solver;
-        type_solver.solve( ast );
+        // Solver type_solver;
+        // type_solver.solve( ast );
         Compiler compiler { std::move( ast ) };
         Machine  machine;
 

@@ -135,8 +135,8 @@ struct Type
 class VariableDeclaration final : public Statement
 {
 public:
-    explicit VariableDeclaration( std::string name, std::unique_ptr< Expression > value, std::unique_ptr< Type > type )
-        : m_name { std::move( name ) }, m_type { std::move( type ) }, m_value { std::move( value ) }
+    explicit VariableDeclaration( std::string name, std::unique_ptr< Expression > value, std::unique_ptr< Type > type, bool comptime )
+        : m_name { std::move( name ) }, m_type { std::move( type ) }, m_value { std::move( value ) }, m_comptime_value { comptime }
     {}
 
     [[nodiscard]]
@@ -157,10 +157,18 @@ public:
         return m_name;
     }
 
-private:
+    [[nodiscard]]
+    bool is_comptime( ) const
+    {
+        return m_comptime_value;
+    }
+
+  private:
     std::string m_name;
     std::unique_ptr< Type > m_type { nullptr };
     std::unique_ptr< Expression > m_value { nullptr };
+    ///@brief If @comptime is encountered the variables value will be evaluated if supported.
+    bool m_comptime_value { false };
 };
 
 class IdentifierLit final : public Expression

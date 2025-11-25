@@ -22,3 +22,11 @@ void EvalVisitor::visit( const Number &n )
 {
     m_result = n.get_value(  );
 }
+
+void EvalVisitor::visit( const CallExpression &c ) { }
+
+void EvalVisitor::visit( const IdentifierLit &i ) { }
+
+void EvalVisitor::visit( const FunctionPrototype &f ) { }
+
+void EvalVisitor::visit( const FunctionExpression &f ) { }
