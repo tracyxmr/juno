@@ -147,6 +147,8 @@ private:
     void comp_ret_stmt( const ReturnStatement& ret );
     ///@brief Compile a prototype statement.
     void comp_proto_stmt( const FunctionPrototype& proto );
+    ///@brief Compile an if statement.
+    void comp_if_stmt( const IfStatement& ifs );
 
     ///@brief Compile an expression.
     [[maybe_unused]] std::uint8_t comp_expression( const Expression* expr );

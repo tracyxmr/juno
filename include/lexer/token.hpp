@@ -29,10 +29,20 @@ namespace token
         SPECIAL,
         WITH,
         RETURN,
-        PRINT,
         SEMI,
         ARROW,
-        PLUS_EQ, // +=
+        ADD_EQ, // +=
+        SUB_EQ,  // -=
+        MUL_EQ,  // *=
+        DIV_EQ,  // /=
+        LT,      // <
+        GT,      // >
+        LTE,     // <=
+        GTE,     // >=
+        NEQ,     // !=
+        EQ,      // ==
+        ELSE,
+        IF,
         FN,
         LET,
         END_OF_FILE

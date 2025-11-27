@@ -30,7 +30,7 @@ std::int32_t main( )
             system_util::get_system_platform(  )
         );
 
-        const std::string test_path { "../../tests/assignment.jn" };
+        const std::string test_path { "../../tests/if.jn" };
 
         std::ifstream file { test_path };
         std::string line;

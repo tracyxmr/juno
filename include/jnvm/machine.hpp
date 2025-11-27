@@ -328,6 +328,42 @@ namespace jnvm::machine
             m_halted = true;
         }
 
+        void execute_jz( const Instruction instruction )
+        {
+            if ( m_registers[ instruction.op1(  ) ] == 0 ) m_pc = instruction.op2(  );
+            else m_pc++;
+        }
+
+        void execute_eq( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] == m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
+        void execute_neq( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] != m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
+        void execute_lt( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] < m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
+        void execute_gt( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] > m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
+        void execute_lte( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] <= m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
+        void execute_gte( const Instruction instruction )
+        {
+            m_registers[ instruction.op3(  ) ] = ( m_registers[ instruction.op1(  ) ] >= m_registers[ instruction.op2(  ) ] ) ? 1 : 0;
+        }
+
         ///@brief Execute a single instruction.
         void execute_one()
         {
@@ -352,7 +388,14 @@ namespace jnvm::machine
                 case Opcode::INC:   execute_inc( i );   m_pc++; break;
                 case Opcode::JMP:   execute_jmp( i );   break;
                 case Opcode::JNZ:   execute_jnz( i );   break;
-                case Opcode::CALL:  execute_call( i ); break;
+                case Opcode::JZ:    execute_jz(i);      break;
+                case Opcode::EQ:    execute_eq(i);      m_pc++; break;
+                case Opcode::NEQ:   execute_neq(i);     m_pc++; break;
+                case Opcode::LT:    execute_lt(i);      m_pc++; break;
+                case Opcode::GT:    execute_gt(i);      m_pc++; break;
+                case Opcode::LTE:   execute_lte(i);     m_pc++; break;
+                case Opcode::GTE:   execute_gte(i);     m_pc++; break;
+                case Opcode::CALL:  execute_call( i );  break;
                 case Opcode::RET:   execute_ret( i );   break;
                 case Opcode::PRF:   execute_prf( i );   m_pc++; break;
                 case Opcode::PRFE:  execute_prfe( i );  m_pc++; break;

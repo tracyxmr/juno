@@ -13,8 +13,6 @@ std::vector< std::unique_ptr< Statement > > parser::Parser::parse( )
 
     while ( m_current.token_type != token::TokenType::END_OF_FILE )
     {
-        if ( check( token::END_OF_FILE ) ) std::println("EOF");
-
         if ( auto stmt = parse_stmt( ) )
             ast.push_back( std::move( stmt ) );
     }
@@ -60,17 +58,13 @@ std::unique_ptr< Expression > parser::Parser::parse_prim( )
     {
         case token::NUMBER: return parse_number( );
         case token::STRING: return parse_string(  );
-        case token::PRINT:
-        case token::IDENTIFIER:
-            return parse_identifier();
+        case token::IDENTIFIER: return parse_identifier();
         case token::LPAREN: return parse_group(  );
         case token::FN:
         {
             auto lambda { parse_lambda() };
-            auto* proto_r { dynamic_cast< FunctionPrototype * >( lambda.get(  ) ) };
+            auto* proto_r { dynamic_cast< FunctionPrototype * >( lambda.release(  ) ) };
             if ( !proto_r ) throw std::runtime_error( "[juno::parse_error] Failed to parse lambda expression." );
-
-            lambda.release( );
 
             return std::make_unique< FunctionExpression >( std::unique_ptr< FunctionPrototype >( proto_r ) );
         }
@@ -81,7 +75,7 @@ std::unique_ptr< Expression > parser::Parser::parse_prim( )
     }
 }
 
-std::unique_ptr< ReturnStatement > parser::Parser::parse_return( )
+std::unique_ptr< Statement > parser::Parser::parse_return( )
 {
     eat(  );
     auto value { parse_expr(  ) };
@@ -149,10 +143,10 @@ std::unique_ptr< Statement > parser::Parser::parse_stmt( )
 {
     switch ( m_current.token_type )
     {
+        case token::IF: return parse_if_stmt(  );
         case token::SPECIAL:
         case token::LET: return parse_var_decl(  );
         case token::IDENTIFIER: return parse_assignment(  );
-        case token::LBRACE:
         case token::FN: return parse_prototype(  );
         case token::RETURN: return parse_return(  );
         default: return parse_expr_stmt(  );
@@ -239,11 +233,11 @@ std::unique_ptr< Statement > parser::Parser::parse_assignment( )
 {
     auto name { m_current.value };
     /* If there is no equals symbol after identifier, parse as an expression statement */
-    if ( !check_ahead( token::EQUALS ) && !check_ahead( token::PLUS_EQ ) )
+    if ( !check_ahead( token::EQUALS ) && !is_compound_op_ahead(  ))
         return parse_expr_stmt(  );
 
     /* If there is a compound symbol e.g += instead of = then parse a compound assignment */
-    if ( check_ahead( token::PLUS_EQ ) )
+    if ( is_compound_op_ahead(  ) )
         return parse_comp_assignment(  );
 
     /* Eat both the identifier and equals token */
@@ -259,17 +253,14 @@ std::unique_ptr< Statement > parser::Parser::parse_assignment( )
 std::unique_ptr< Statement > parser::Parser::parse_comp_assignment( )
 {
     auto name { expect( token::IDENTIFIER, "Expected an identifier for lvalue of compound assignment." ) };
+    const auto op { compound_op(  ) };
+    eat(  );
 
-    CompoundOperator op;
-    switch ( m_current.token_type )
-    {
-        case token::PLUS_EQ: op = CompoundOperator::ADD; eat(  ); break;
-        default: throw std::runtime_error("[juno::parser_error] Expected compound operator.");
-    }
+    if ( !op.has_value(  ) ) throw std::runtime_error( "[juno::parse_error] An unexpected error occured." );
 
     auto value { parse_expr(  ) };
     expect( token::SEMI, "Expected ';' after value in assignment." );
-    return std::make_unique< CompoundAssignment >( std::move( name ), std::move( value ), op );
+    return std::make_unique< CompoundAssignment >( std::move( name ), std::move( value ), *op );
 }
 
 std::unique_ptr< Statement > parser::Parser::parse_var_decl( )
@@ -308,6 +299,46 @@ std::unique_ptr< Statement > parser::Parser::parse_var_decl( )
         std::move( type ),
         comptime
     );
+}
+
+std::unique_ptr< Statement > parser::Parser::parse_if_stmt( )
+{
+    expect( token::IF, "Expected 'if'" );
+    expect( token::LPAREN, "Expected '(' after 'if'" );
+    auto condition { parse_expr(  ) };
+    expect( token::RPAREN, "Expected ')' after if statement condition." );
+    auto body_stmt { parse_block(  ) };
+    auto body { std::unique_ptr< BlockStmt >( dynamic_cast< BlockStmt * >( body_stmt.release(  ) ) ) };
+
+    if ( !body ) throw std::runtime_error("[juno::parse_error] Expected block statement for if body.");
+
+    /* Check for else if */
+    if ( check_ahead( token::IF ) && match( token::ELSE ) )
+    {
+        auto else_if { parse_if_stmt(  ) };
+        auto else_b { std::unique_ptr< IfStatement >( dynamic_cast< IfStatement * >( else_if.release( ) ) ) };
+        return std::make_unique< IfStatement >(
+            std::move( condition ),
+            std::move( body ),
+            std::nullopt,
+            std::move( else_b )
+        );
+    }
+
+    /* Else */
+    if ( match(token::ELSE) )
+    {
+        auto else_s { parse_block(  ) };
+        auto else_b { std::unique_ptr< BlockStmt >( dynamic_cast< BlockStmt * >( else_s.release( ) ) ) };
+        if ( !else_b ) throw std::runtime_error("[juno::parse_error] Expected block statement for else.");
+        return std::make_unique< IfStatement >(
+            std::move( condition ),
+            std::move( body ),
+            std::move( else_b )
+        );
+    }
+
+    return std::make_unique< IfStatement >( std::move( condition ), std::move( body ) );
 }
 
 std::unique_ptr< Statement > parser::Parser::parse_expr_stmt( )
@@ -413,6 +444,32 @@ std::optional< BinaryOp > parser::Parser::binary_op( ) const
         case token::MINUS: return BinaryOp { BinaryOp::SUB };
         case token::ASTERISK: return BinaryOp { BinaryOp::MUL };
         case token::SLASH: return BinaryOp { BinaryOp::DIV };
+        case token::LT: return BinaryOp {  BinaryOp::LT };
+        case token::GT: return BinaryOp {  BinaryOp::GT };
+        case token::LTE: return BinaryOp {  BinaryOp::LTE };
+        case token::GTE: return BinaryOp {  BinaryOp::GTE };
+        case token::EQ: return BinaryOp {  BinaryOp::EQ };
+        case token::NEQ: return BinaryOp {  BinaryOp::NEQ };
         default: return std::nullopt;
     }
+}
+
+std::optional< CompoundOperator > parser::Parser::compound_op( ) const
+{
+    switch ( m_current.token_type )
+    {
+        case token::ADD_EQ: return ADD;
+        case token::SUB_EQ: return SUB;
+        case token::MUL_EQ: return MUL;
+        case token::DIV_EQ: return DIV;
+        default: return std::nullopt;
+    }
+}
+
+bool parser::Parser::is_compound_op_ahead( ) const
+{
+    return check_ahead( token::ADD_EQ ) ||
+        check_ahead( token::SUB_EQ ) ||
+        check_ahead( token::MUL_EQ ) ||
+        check_ahead( token::DIV_EQ );
 }

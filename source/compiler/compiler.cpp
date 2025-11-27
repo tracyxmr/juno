@@ -135,6 +135,10 @@ void Compiler::comp_statement( const Statement &stmt )
     {
         comp_block_stmt( *b );
     }
+    else if ( const auto* i { dynamic_cast< const IfStatement* >( &stmt ) } )
+    {
+        comp_if_stmt( *i );
+    }
     else if ( const auto* r { dynamic_cast< const ReturnStatement* >( &stmt ) } )
     {
         comp_ret_stmt( *r );
@@ -271,6 +275,40 @@ void Compiler::comp_proto_stmt( const FunctionPrototype &proto )
 
     exit_scope(  );
     restore_register( saved );
+}
+
+void Compiler::comp_if_stmt( const IfStatement &ifs )
+{
+    const auto condition_reg { comp_expression( ifs.get_condition(  ).get(  ) ) };
+    /* emit jz if condition is false (zero) */
+    const auto jz_addr { current_addr(  ) };
+    emit( jnvm::inst::Instruction( jnvm::inst::Opcode::JZ, condition_reg, 0 ) );
+
+    /* first body compilation (then) */
+    comp_statement( *ifs.get_body(  ) );
+
+    /* unconditional jump if the IfStatement has an else or else if block */
+    std::optional< std::size_t > jmp_addr;
+    if ( ifs.has_else(  ) || ifs.has_else_if(  ) )
+    {
+        jmp_addr = current_addr(  );
+        emit( jnvm::inst::Instruction( jnvm::inst::Opcode::JMP, 0 ) );
+    }
+
+    /* patch the previous jz address after the then block */
+    const auto else_start_addr { current_addr(  ) };
+    m_bytecode[ jz_addr ] = jnvm::inst::Instruction( jnvm::inst::Opcode::JZ, condition_reg, static_cast< std::uint8_t >( else_start_addr & 0xFF ) ).data(  );
+
+    /* else ifs */
+    if ( ifs.has_else_if(  ) ) comp_if_stmt( *ifs.get_else_if(  ).value(  ) );
+    else if ( ifs.has_else(  ) ) comp_statement( *ifs.get_else_body(  ).value(  ) );
+
+    /* patch the unconditonal jump made after compiling then body */
+    if ( jmp_addr.has_value(  ) )
+    {
+        const auto end_addr { current_addr(  ) };
+        m_bytecode[ *jmp_addr ] = jnvm::inst::Instruction( jnvm::inst::Opcode::JMP, static_cast< std::uint8_t >( end_addr & 0xFF ) ).data(  );
+    }
 }
 
 std::uint8_t Compiler::comp_expression( const Expression *expr )
@@ -410,6 +448,12 @@ jnvm::inst::Opcode Compiler::binop_to_opcode( const BinaryOp::Type op )
         case BinaryOp::SUB: return jnvm::inst::Opcode::SUB;
         case BinaryOp::MUL: return jnvm::inst::Opcode::MUL;
         case BinaryOp::DIV: return jnvm::inst::Opcode::DIV;
+        case BinaryOp::NEQ: return jnvm::inst::Opcode::NEQ;
+        case BinaryOp::EQ:  return jnvm::inst::Opcode::EQ;
+        case BinaryOp::LT:  return jnvm::inst::Opcode::LT;
+        case BinaryOp::GT:  return jnvm::inst::Opcode::GT;
+        case BinaryOp::LTE: return jnvm::inst::Opcode::LTE;
+        case BinaryOp::GTE: return jnvm::inst::Opcode::GTE;
         default: throw RuntimeError( "Unknown binary operator" );
     }
 }

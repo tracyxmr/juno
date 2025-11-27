@@ -37,7 +37,7 @@ std::vector<token::Token> lexer::Lexer::tokenize()
             std::size_t start_col { col };
             if (current == '@') advance(  );
 
-            while ( pos < source.size( ) && std::isalpha( source.at( pos ) )) advance(  );
+            while ( pos < source.size( ) && std::isalnum( source.at( pos ) )) advance(  );
 
             const std::string value { source.substr( start, pos - start ) };
             token::TokenType token_type { token::IDENTIFIER };

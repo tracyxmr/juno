@@ -22,11 +22,19 @@ namespace jnvm::inst
 
         JMP,    /// An unconditional jump
         JNZ,    /// Will jump if not zero
+        JZ,     /// Will jump if zero
         CALL,   /// Call a native or user defined function
         RET,    /// Return from a function
 
+        EQ,     /// Two registers are equal
+        NEQ,    /// Two registers are not equal
+        LT,     /// If register 1 is less than register 2, store in result register.
+        GT,     /// If register 1 is greater than register 2, store in result register.
+        LTE,    /// If register 1 is less than or equal to register 2, store in result register.
+        GTE,    /// If register 1 is greater than or equal to register 2, store in result register.
+
         INC,    /// Increment a registers value
-        EQ,     /// Compare two registers
+        DEC,    /// Decrement a registers value
         PRF,    /// Start the profiler
         PRFE,   /// End the profiler
         HLT,    /// Halt execution of the virtual machine

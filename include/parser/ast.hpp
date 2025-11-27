@@ -119,6 +119,57 @@ private:
     std::vector< std::unique_ptr< Statement > > m_body { };
 };
 
+class IfStatement final : public Statement
+{
+public:
+    explicit IfStatement(
+        std::unique_ptr< Expression > condition,
+        std::unique_ptr< BlockStmt > then_body,
+        std::optional< std::unique_ptr< BlockStmt > > else_body = std::nullopt,
+        std::optional< std::unique_ptr< IfStatement > > else_if = std::nullopt
+    ) :
+        m_condition { std::move( condition ) },
+        m_body { std::move( then_body ) },
+        m_else_body { std::move( else_body ) },
+        m_else_if { std::move( else_if ) }
+    { }
+
+    [[nodiscard]]
+    const std::unique_ptr< Expression > &get_condition( ) const
+    {
+        return m_condition;
+    }
+
+    [[nodiscard]]
+    const std::unique_ptr< BlockStmt > &get_body( ) const
+    {
+        return m_body;
+    }
+
+    [[nodiscard]]
+    const std::optional< std::unique_ptr< BlockStmt > > &get_else_body( ) const
+    {
+        return m_else_body;
+    }
+
+    [[nodiscard]]
+    const std::optional< std::unique_ptr< IfStatement > > &get_else_if( ) const
+    {
+        return m_else_if;
+    }
+
+    [[nodiscard]]
+    bool has_else( ) const { return m_else_body.has_value(  ); }
+
+    [[nodiscard]]
+    bool has_else_if( ) const { return m_else_if.has_value(  ); }
+private:
+    std::unique_ptr< Expression > m_condition { nullptr };
+    std::unique_ptr< BlockStmt > m_body { nullptr };
+    std::optional< std::unique_ptr< BlockStmt > > m_else_body { nullptr };
+    std::optional< std::unique_ptr< IfStatement > > m_else_if { nullptr };
+};
+
 enum class TypeKind
 {
     Simple,     /// int, string
@@ -160,7 +211,10 @@ private:
 
 enum CompoundOperator
 {
-    ADD
+    ADD,
+    SUB,
+    MUL,
+    DIV
 };
 
 class CompoundAssignment final : public Statement
@@ -356,6 +410,12 @@ struct BinaryOp
         SUB,
         MUL,
         DIV,
+        EQ,
+        NEQ,
+        LT,
+        GT,
+        LTE,
+        GTE,
         NOP,    /// No operation
     };
 
@@ -371,6 +431,12 @@ struct BinaryOp
             case SUB: return "SUB";
             case MUL: return "MUL";
             case DIV: return "DIV";
+            case EQ: return "EQ";
+            case NEQ: return "NEQ";
+            case LT: return "LT";
+            case GT: return "GT";
+            case LTE: return "LTE";
+            case GTE: return "GTE";
             case NOP: return "NOP";
         }
 
@@ -383,6 +449,9 @@ struct BinaryOp
     {
         switch ( op )
         {
+            case NEQ: case EQ:
+            case LTE: case GTE:
+            case LT: case GT:   return 0;
             case ADD: case SUB: return 1;
             case MUL: case DIV: return 2;
             case NOP: return -1;

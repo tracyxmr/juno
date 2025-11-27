@@ -27,6 +27,8 @@ namespace lexer
         { ',', token::TokenType::COMMA },
         { ';', token::TokenType::SEMI },
         { ':', token::TokenType::COLON },
+        { '<', token::TokenType::LT },
+        { '>', token::TokenType::GT },
     };
 
     const std::unordered_map<
@@ -35,9 +37,10 @@ namespace lexer
     > token_keywords_map
     {
         { "let", token::TokenType::LET },
-        { "print", token::TokenType::PRINT },
         { "with", token::TokenType::WITH },
         { "fn", token::TokenType::FN },
+        { "if", token::TokenType::IF },
+        { "else", token::TokenType::ELSE },
         { "return", token::TokenType::RETURN },
         { "@profile", token::TokenType::SPECIAL },
         { "@comptime", token::TokenType::SPECIAL },
@@ -48,8 +51,15 @@ namespace lexer
         token::TokenType
     > token_compound_map
     {
-        { "+=", token::TokenType::PLUS_EQ },
-        { "->", token::TokenType::ARROW }
+        { "+=", token::TokenType::ADD_EQ },
+        { "-=", token::TokenType::SUB_EQ },
+        { "*=", token::TokenType::MUL_EQ },
+        { "/=", token::TokenType::DIV_EQ },
+        { "->", token::TokenType::ARROW },
+        { "<=", token::TokenType::LTE },
+        { ">=", token::TokenType::GTE },
+        { "==", token::TokenType::EQ },
+        { "!=", token::TokenType::NEQ },
     };
 
     class Lexer
@@ -63,7 +73,7 @@ namespace lexer
         std::vector< token::Token > tokenize( );
     private:
         std::string source;
-        std::size_t line { 0 };
+        std::size_t line { 1 };
         std::size_t col { 1 };
         std::size_t pos { 0 };
 

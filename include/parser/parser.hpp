@@ -39,7 +39,10 @@ namespace parser
         ///@brief Parse a function prototype as named or anonymous (lambda).
         std::unique_ptr< Statement > parse_lambda();
         ///@brief Parse a return statement.
-        std::unique_ptr< ReturnStatement > parse_return();
+        std::unique_ptr< Statement > parse_return();
+        ///@brief Parse an if statement.
+        std::unique_ptr< Statement > parse_if_stmt();
+
         ///@brief Parse function prototype parameters.
         std::vector< Parameter > parse_params();
 
@@ -85,5 +88,13 @@ namespace parser
         ///@brief Helper function which creates a new BinaryOp struct if the current token is one.
         [[nodiscard]]
         std::optional< BinaryOp > binary_op( ) const;
+
+        ///@brief Helper function which returns the associated compound operator with it's token.
+        [[nodiscard]]
+        std::optional< CompoundOperator > compound_op( ) const;
+
+        ///@brief Helper function to determine if the token ahead type is a compound operator.
+        [[nodiscard]]
+        bool is_compound_op_ahead( ) const;
     };
 }
