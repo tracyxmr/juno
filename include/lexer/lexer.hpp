@@ -41,6 +41,7 @@ namespace lexer
         { "fn", token::TokenType::FN },
         { "if", token::TokenType::IF },
         { "else", token::TokenType::ELSE },
+        { "extern", token::TokenType::EXTERN },
         { "return", token::TokenType::RETURN },
         { "@profile", token::TokenType::SPECIAL },
         { "@comptime", token::TokenType::SPECIAL },

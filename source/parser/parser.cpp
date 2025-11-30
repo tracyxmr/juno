@@ -143,6 +143,7 @@ std::unique_ptr< Statement > parser::Parser::parse_stmt( )
 {
     switch ( m_current.token_type )
     {
+        case token::EXTERN: return parse_extern_proto( );
         case token::IF: return parse_if_stmt(  );
         case token::SPECIAL:
         case token::LET: return parse_var_decl(  );
@@ -151,6 +152,26 @@ std::unique_ptr< Statement > parser::Parser::parse_stmt( )
         case token::RETURN: return parse_return(  );
         default: return parse_expr_stmt(  );
     }
+}
+
+std::unique_ptr< Statement > parser::Parser::parse_extern_proto( )
+{
+    expect( token::EXTERN, "Expected 'extern' keyword." );
+    expect( token::FN, "Expected 'fn' keyword after 'extern'." );
+    auto name { expect( token::IDENTIFIER, "Expected function name in extern prototype statement." ) };
+    expect( token::LPAREN, "Expected '(' after functio name." );
+    auto params { parse_params(  ) };
+    expect( token::RPAREN, "Expected ')' after parameters." );
+    expect( token::ARROW, "Expected '->' after parameters." );
+    auto ret_type_name { expect( token::IDENTIFIER, "Expected return type name after '->' in extern prototype statement." ) };
+    auto ret_type { std::make_unique< Type >( TypeKind::Simple, ret_type_name, std::nullopt ) };
+    expect( token::SEMI, "Expected ';' after extern prototype's type." );
+
+    return std::make_unique< ExternalFunctionProto >(
+        name,
+        std::move( params ),
+        std::move( ret_type )
+    );
 }
 
 std::unique_ptr< Statement > parser::Parser::parse_prototype( )

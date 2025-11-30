@@ -30,6 +30,7 @@ namespace token
         WITH,
         RETURN,
         SEMI,
+        EXTERN,
         ARROW,
         ADD_EQ, // +=
         SUB_EQ,  // -=

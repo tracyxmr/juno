@@ -38,6 +38,8 @@ namespace parser
         std::unique_ptr< Statement > parse_prototype();
         ///@brief Parse a function prototype as named or anonymous (lambda).
         std::unique_ptr< Statement > parse_lambda();
+        ///@brief Parse an extern function prototype / decl
+        std::unique_ptr< Statement > parse_extern_proto();
         ///@brief Parse a return statement.
         std::unique_ptr< Statement > parse_return();
         ///@brief Parse an if statement.

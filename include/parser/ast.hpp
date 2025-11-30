@@ -567,6 +567,43 @@ struct Parameter
     {}
 };
 
+///@brief An external function prototype / declaration, no body, a link.
+class ExternalFunctionProto final : public Statement
+{
+public:
+    explicit ExternalFunctionProto(
+        std::string name,
+        std::vector< Parameter > params,
+        std::unique_ptr< Type > ret_type
+    ) :
+        m_name { std::move( name ) },
+        m_params { std::move( params ) },
+        m_ret_type { std::move( ret_type ) }
+    { }
+
+    [[nodiscard]]
+    std::string_view get_name() const
+    {
+        return m_name;
+    }
+
+    [[nodiscard]]
+    const std::vector< Parameter >& get_params() const
+    {
+        return m_params;
+    }
+
+    [[nodiscard]]
+    const std::unique_ptr< Type >& get_return_type() const
+    {
+        return m_ret_type;
+    }
+private:
+    std::string m_name;
+    std::vector< Parameter > m_params;
+    std::unique_ptr< Type > m_ret_type { nullptr };
+};
+
 ///@brief This class represents a function prototype
 /// this class supports named functions and lambdas
 class FunctionPrototype final : public Statement

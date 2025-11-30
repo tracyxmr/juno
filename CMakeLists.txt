@@ -11,6 +11,11 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Find LLVM
+find_package(LLVM REQUIRED CONFIG)
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+
 # Add compiler options for MSVC.
 if (MSVC)
     add_compile_options(/MP) # /MP for multi-processor compilation
@@ -50,8 +55,26 @@ configure_file(
         @ONLY
 )
 
+# Set up LLVM
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
 # Add executable target (Change to add_library if building DLL).
 add_executable(${PROJECT_NAME} ${PROJ_SOURCES} ${PROJ_HEADERS})
+
+llvm_map_components_to_libnames(llvm_libs
+    core
+    support
+    target
+    irreader
+    analysis
+    executionengine
+    interpreter
+    mc
+    mcjit
+    orcjit
+    native
+)
 
 # Add the include directories for the project.
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -59,6 +82,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
+
+# Link LLVM libraries
+target_link_libraries(${PROJECT_NAME} ${llvm_libs})
 
 # Set output directories for binaries and libraries.
 set_target_properties(${PROJECT_NAME} PROPERTIES
