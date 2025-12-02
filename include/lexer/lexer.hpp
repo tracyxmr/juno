@@ -43,6 +43,8 @@ namespace lexer
         { "else", token::TokenType::ELSE },
         { "extern", token::TokenType::EXTERN },
         { "return", token::TokenType::RETURN },
+        { "true", token::TokenType::TRUE },
+        { "false", token::TokenType::FALSE },
         { "@profile", token::TokenType::SPECIAL },
         { "@comptime", token::TokenType::SPECIAL },
     };

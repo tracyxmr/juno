@@ -1,5 +1,4 @@
 #include <format>
-#include <print>
 #include <stdexcept>
 #include <parser/parser.hpp>
 
@@ -58,6 +57,7 @@ std::unique_ptr< Expression > parser::Parser::parse_prim( )
     {
         case token::NUMBER: return parse_number( );
         case token::STRING: return parse_string(  );
+        case token::TRUE: case token::FALSE: return parse_boolean(  );
         case token::IDENTIFIER: return parse_identifier();
         case token::LPAREN: return parse_group(  );
         case token::FN:
@@ -220,6 +220,14 @@ std::unique_ptr< Statement > parser::Parser::parse_lambda( )
         std::move( ret_type ),
         std::move( block_stmt )
     );
+}
+
+std::unique_ptr< Expression > parser::Parser::parse_boolean( )
+{
+    const auto value { check( token::TRUE ) ? 1 : 0 };
+    eat(  );
+
+    return std::make_unique< Number >( value );
 }
 
 std::vector< Parameter > parser::Parser::parse_params( )

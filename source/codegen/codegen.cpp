@@ -17,7 +17,7 @@ namespace codegen
 
     void codegen::visit( const String &s )
     {
-        m_last = m_ir_builder.CreateGlobalStringPtr( s.get_value(  ) );
+        m_last = m_ir_builder.CreateGlobalString( s.get_value(  ) ); /* I ignored the deprecation warning, fixed. */
     }
 
     void codegen::visit( const BinaryExpression &b )

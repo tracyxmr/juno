@@ -46,6 +46,8 @@ namespace token
         IF,
         FN,
         LET,
+        TRUE,
+        FALSE,
         END_OF_FILE
     };
 

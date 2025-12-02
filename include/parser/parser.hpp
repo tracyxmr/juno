@@ -56,6 +56,8 @@ namespace parser
         std::unique_ptr< Expression > parse_prim();
         ///@brief Parse a numeric literal as a number expression.
         std::unique_ptr< Expression > parse_number();
+        ///@brief Parse a boolean literal as a number expression.
+        std::unique_ptr< Expression > parse_boolean();
         ///@brief Parse a string literal as a string expression.
         std::unique_ptr< Expression > parse_string();
         ///@brief Parse an identifier expression.
