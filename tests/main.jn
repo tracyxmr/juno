@@ -1,8 +1,1 @@
-fn main() -> int {
-    let state = true;
-    if ( state ) {
-        println("state is true");
-    } else {
-        println("state is false");
-    }
-}
+print("hello world!");

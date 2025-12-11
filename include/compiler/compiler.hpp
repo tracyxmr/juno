@@ -116,7 +116,6 @@ private:
 
     ///@brief Helper function to allocate a register and get it's index.
     [[maybe_unused]]
-    [[nodiscard]]
     std::uint8_t alloc_register( );
 
     ///@brief Helper fucntion to save the current register state

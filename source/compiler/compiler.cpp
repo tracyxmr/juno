@@ -1,4 +1,3 @@
-#include <print>
 #include <compiler/compiler.hpp>
 
 const std::unordered_map< std::string_view, jnvm::inst::VMNativeID > Compiler::m_natives_map = {
@@ -93,6 +92,7 @@ std::optional< std::uint8_t > Compiler::find_variable( std::string_view name ) c
     return std::nullopt;
 }
 
+[[maybe_unused]]
 std::uint8_t Compiler::alloc_register( )
 {
     if ( m_next_register >= 255 ) throw RuntimeError( "Register exhaustion" );

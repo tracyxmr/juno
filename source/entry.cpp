@@ -1,6 +1,5 @@
 #include "constants.hpp"
 #include "system_util.hpp"
-#include "codegen/codegen.hpp"
 #include "compiler/compiler.hpp"
 #include "jnvm/machine.hpp"
 #include "lexer/lexer.hpp"
@@ -11,10 +10,6 @@
 #include <iostream>
 #include <print>
 #include <utility>
-
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/MC/TargetRegistry.h>
 
 using namespace lexer;
 using namespace parser;
@@ -70,29 +65,6 @@ std::vector< std::unique_ptr< Statement > > load_std( )
     return ast;
 }
 
-///@brief Run the module with LLVM JIT Execution
-void jit_module( std::unique_ptr< llvm::Module > mod )
-{
-    llvm::InitializeNativeTarget(  );
-    llvm::InitializeNativeTargetAsmPrinter(  );
-    llvm::InitializeNativeTargetAsmParser(  );
-
-    auto result { llvm::orc::LLJITBuilder( ).create(  ) };
-    if ( !result ) throw std::runtime_error( std::format( "[juno::jit_error] Failed to create JIT builder, error: {}", llvm::toString( result.takeError(  ) ) ) );
-
-    const auto jit { std::move( *result ) };
-
-    if ( auto err { jit->addIRModule( llvm::orc::ThreadSafeModule( std::move( mod ), std::make_unique< llvm::LLVMContext >( ) ) ) } )
-        throw std::runtime_error( std::format( "[juno::jit_error] Failed to add module to JIT, error: {}", llvm::toString( std::move( err ) ) ) );
-
-    auto main { jit->lookup( "main" ) };
-    if ( !main )
-        throw std::runtime_error( std::format( "[juno::jit_error] Failed to find 'main' function, error: {}", llvm::toString( main.takeError(  ) ) ) );
-
-    const auto fn { main->toPtr< double( * )( ) >(  ) };
-    auto fn_result { fn( ) };
-}
-
 ///@brief The entry point of the application.
 std::int32_t main( )
 {
@@ -108,15 +80,16 @@ std::int32_t main( )
         );
 
         const std::string test_path { "../../tests/main.jn" };
-        const auto file_ast { load_juno_file( test_path ) };
+        auto file_ast { load_juno_file( test_path ) };
 
-        codegen::codegen codegen;
+        Compiler compiler { std::move( file_ast ) };
+        auto compile_result { compiler.compile(  ) };
 
-        for ( std::size_t i { 0 }; i < file_ast.size(); ++i )
-            codegen.generate_stmt( file_ast[i].get() );
+        Machine machine;
 
-        codegen.write( "out.ll" );
-        jit_module( codegen.release_module(  ) );
+        machine.load( compile_result.bytecode );
+        machine.load_strings( compile_result.string_pool );
+        auto result = machine.execute(  );
     }
     catch ( const std::exception& err )
     {

@@ -1,5 +1,5 @@
 # juno
-A blazing fast programming language aimed for safety and simplicity, built with LLVM.
+A blazing fast programming language aimed for safety and simplicity.
 
 # Quick Start
 Installation
@@ -14,15 +14,12 @@ cd juno
 
 # Examples and Explanations
 ```
-fn main() -> int {
-    println("hello, world!");
-}
+print("hello, world!");
 ```
 
-Juno is a compiled language, so we need to define an entry point for our program. You can do so by defining the `main` function, this is where all of your code will start. The return value of the `main` function is the only function where the return value is implicit, it will default to `0`.
+Juno is an interpreted language, so we don't need to define an entry point for our program.
 # Building from Source
 ### Prerequisites
-* LLVM
 * C++23 or higher
 * CMake 3.15 or higher
 * A C++ compiler ( GCC, Clang or MSVC )
