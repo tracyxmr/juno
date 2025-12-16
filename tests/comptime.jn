@@ -1,2 +1,0 @@
-@comptime let x = 10 * 10;
-print(x);

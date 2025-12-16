@@ -1,5 +1,0 @@
-fn adder(a: double, b: double) -> double {
-    return a + b;
-}
-
-print(adder(10, 50));

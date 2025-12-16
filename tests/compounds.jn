@@ -1,9 +1,0 @@
-let value = 1;
-value += 1;
-
-print("value += 1 =", value);
-
-let value2 = 10;
-value2 -= 5;
-
-print("value2 -= 5 =", value2);

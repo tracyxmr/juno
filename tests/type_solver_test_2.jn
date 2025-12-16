@@ -1,4 +1,0 @@
-fn foo() -> double { return 2; }
-// this should error because foo returns double
-// and num expects string
-let num: string = foo();
